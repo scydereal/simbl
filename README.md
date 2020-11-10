@@ -39,6 +39,10 @@ digraph G {
 	Browser->Git_Server[];
 }
 
+Which GraphViz will render as
+![image](https://user-images.githubusercontent.com/32442230/98658815-52201480-22f8-11eb-83f5-4c313c3f91d2.png)
+
+
 Rules:
 1. Use tabs to 
 2. CALLS or CBY  is always on the line after the name of the source node. ANNO is always on the same line as the node or edge it modifies.
