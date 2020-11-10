@@ -1,5 +1,6 @@
 Simbl is a very simple language for expressing directed graphs whose nodes can have children, and nodes and edges can have annotations. There are three keywords: ANNO (annotation), CALLS, CALLEDBY (alias CBY). The following example shows every feature in Simbl.
 
+```
 My_Computer
 	Browser
 		CALLS Operating_System ANNO invokes OS's networking capabilities to connect to github.com
@@ -10,9 +11,11 @@ DNS_Server
 
 Git_Server ANNO serves the webpages, stores github data, etc
 	CALLEDBY Browser
+```
 
 gv.py transpiles Simbl to Dot, a much more powerful graph language, for which visualization engines exist. The above Simbl turns into the following Dot:
 
+```
 digraph G {
     compound=true;
     fontname="Helvetica" fontsize=8;
@@ -38,10 +41,10 @@ digraph G {
 	Operating_System->DNS_Server[label="DNS server returns IP address of github.com \n" fontcolor="0.74 0.25 0.8" color="0.74 0.25 0.8"];
 	Browser->Git_Server[];
 }
+```
 
 Which GraphViz will render as
 ![image](https://user-images.githubusercontent.com/32442230/98658815-52201480-22f8-11eb-83f5-4c313c3f91d2.png)
-
 
 Rules:
 1. Use tabs to 
