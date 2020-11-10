@@ -1,7 +1,5 @@
 import sys
 
-debug_print = True
-
 class Node:
 	# name, annotation, children[], is_parent_node, 
 	def __init__(self, name, anno):
@@ -68,7 +66,6 @@ def extractNodesAndEdges(simbl_source_file):
 		debug_linecount = 0
 		for line in simbl_source:
 			debug_linecount += 1
-			if debug_print: print debug_linecount
 			if line.isspace(): continue
 			num_ancestors = 0
 			while line[num_ancestors] == '\t': num_ancestors += 1
