@@ -1,0 +1,10 @@
+My_Computer
+	Browser
+		CALLS Operating_System ANNO invokes OS's networking capabilities to connect to github.com
+	Operating_System
+
+DNS_Server
+	CBY Operating_System ANNO DNS server returns IP address of github.com
+
+Git_Server ANNO serves the webpages, stores github data, etc
+	CALLEDBY Browser

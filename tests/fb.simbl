@@ -1,0 +1,21 @@
+A
+	B
+		CALLS C ANNO if not group chat
+		CALLS E ANNO if group chat
+	E
+		CALLS D
+
+Q
+	C ANNO immediately starts call
+	D ANNO checks if call is unsupported, returns if so
+		CALLS P ANNO opens dialog
+
+X
+	P
+		CALLS Z
+
+Z
+	CALLS Y ANNO passes it usersToRing
+
+W
+	V ANNO rets some entity that does usersToRing array manip.

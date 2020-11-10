@@ -1,0 +1,27 @@
+getNextEdgeAnnotationColor
+	CBY printEdges
+
+printEdges
+	CALLS isParentNode
+	CALLS findLeafDescendantName
+	CALLS getClusterAlias
+
+printNodesDescendedFromTopLevelNode
+	CALLS getClusterAlias
+	CALLS leafNodeToString
+	CALLS leafNodeToString
+
+MainCodeBody
+	CALLS printNodesDescendedFromTopLevelNode
+	CALLS printEdges
+	CALLS printPrelude
+	CALLS extractNodesAndEdges
+
+extractNodesAndEdges
+	CALLS checkNodeName
+	CALLS makeEdgeAnnotation
+	CALLS makeNodeAnnotation
+
+makeAnnotation
+	CBY makeEdgeAnnotation
+	CBY makeNodeAnnotation
