@@ -218,7 +218,7 @@ def generate(simbl_file):
 def main():
 	source_file_name = sys.argv[1] if len(sys.argv) > 1 else 'graph.simbl'
 	for line in generate(source_file_name):
-		print line
+		print(line)
 
 if __name__ == "__main__":
 	main()
