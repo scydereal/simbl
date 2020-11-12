@@ -53,22 +53,40 @@ def checkNodeName(name):
 	troublemakers = ["."]
 	for trouble in troublemakers:
 		if trouble in name:
-			print "Node name" + name + "has character" + trouble + "which is not an allowed character."
+			print("Node name" + name + "has character" + trouble + "which is not an allowed character.")
 			return False
 	return True
+
+def countStartingTabOr4space(original_line):
+	line = original_line
+	count = 0
+	while line[0].isspace():
+		if line[0] == '\t':
+			count += 1
+			line = line[1:]
+		elif line[0] == ' ':
+			if line[1] == ' ' and line[2] == ' ' and line[3] == ' ':
+				count += 1
+				line = line[4:]
+			else:
+				print("ERR: Line should start with a number of tabs or 4 spaces but does not: \"" + original_line + "\"")
+				break;
+				
+	return count
+
 
 def extractNodesAndEdges(simbl_source_file):
 	ancestorStack = [] # at any given point, should list nodes ending with the current node 'in scope' / being processed, and beginning with the root ancestor of that node.
 	topLevelNodeNames = [] # Node[]
 	nodeMap = {} # name : Node 
 	edges = [] # Edge[]
-	with open(simbl_source_file, 'rb') as simbl_source:
+	with open(simbl_source_file, 'r') as simbl_source:
 		debug_linecount = 0
 		for line in simbl_source:
 			debug_linecount += 1
 			if line.isspace(): continue
-			num_ancestors = 0
-			while line[num_ancestors] == '\t': num_ancestors += 1
+			num_ancestors = countStartingTabOr4space(line)
+			# while line[num_ancestors] == '\t': num_ancestors += 1
 			ancestorStack = ancestorStack[:num_ancestors]
 
 			lineArr = line.split()
@@ -93,11 +111,11 @@ def extractNodesAndEdges(simbl_source_file):
 		return topLevelNodeNames, nodeMap, edges
 
 def printPrelude():
-	print '''
+	print('''
 digraph G {
 	compound=true;
 	# rankdir=LR; # uncomment to make graph go left to right
-	fontname=\"Arial\" fontsize=8;
+	fontname=\"Helvetica\" fontsize=8;
 	node [
 		shape=box color=steelblue
 		fontname=\"Helvetica\" fontsize=8 
@@ -106,7 +124,7 @@ digraph G {
 		fontname=\"Helvetica\" fontsize=6 fontcolor=steelblue
 		color=steelblue
 		arrowsize = 0.5]
-	'''
+	''')
 
 def leafNodeToString(node):
 	if node.anno is not None:
@@ -122,21 +140,21 @@ def printNodesDescendedFromTopLevelNode(nodeName, nodeMap, tabDepth=1):
 	node = nodeMap[nodeName]
 
 	if node.isLeafNode():
-		print tabstr + leafNodeToString(node)
+		print(tabstr + leafNodeToString(node))
 	else: # has children - turn into 'cluster' and recurse on children
-		print tabstr + "subgraph " + getClusterAlias(nodeName) + " {"
+		print(tabstr + "subgraph " + getClusterAlias(nodeName) + " {")
 		if node.anno is not None:
-			print tabstr + "label=<" + nodeName + "<BR /><FONT POINT-SIZE='6'>" + node.anno + "</FONT>>"
+			print(tabstr + "label=<" + nodeName + "<BR /><FONT POINT-SIZE='6'>" + node.anno + "</FONT>>")
 		else:
-			print tabstr + "label =\"" + nodeName +  "\""
+			print(tabstr + "label =\"" + nodeName +  "\"")
 		for childName in node.children:
 			printNodesDescendedFromTopLevelNode(childName, nodeMap, tabDepth + 1)
-		print tabstr + "}"
+		print(tabstr + "}")
 
 def isParentNode(nodeName, nodeMap):
 	return nodeName in nodeMap and not nodeMap[nodeName].isLeafNode()
 
-def findLeafDescendantName(nodeName):
+def findLeafDescendantName(nodeName, nodeMap):
 	node = nodeMap[nodeName]
 	while node and not node.isLeafNode():
 		nodeName = node.children[0]
@@ -148,7 +166,7 @@ def getNextEdgeAnnotationColor():
 	global hue
 	hue += 0.17
 	if hue >= 1.00: hue -= 1.0
-	return str(hue) + " 0.25 0.8"
+	return str(int(10*hue)/10.0) + " 0.25 0.8"
 
 def printEdges(edges, nodeMap):
 	for edge in edges:
@@ -162,13 +180,13 @@ def printEdges(edges, nodeMap):
 		# use it instead.
 		srcLeafName = edge.src
 		if isParentNode(edge.src, nodeMap):
-			srcLeafName = findLeafDescendantName(srcLeafName)
+			srcLeafName = findLeafDescendantName(srcLeafName, nodeMap)
 			srcClusterName = getClusterAlias(edge.src)
 			edgeModifierStrArr.append("ltail=" + srcClusterName)
 
 		dstLeafName = edge.dst
 		if isParentNode(edge.dst, nodeMap):
-			dstLeafName = findLeafDescendantName(dstLeafName)
+			dstLeafName = findLeafDescendantName(dstLeafName, nodeMap)
 			dstClusterName = getClusterAlias(edge.dst)
 			edgeModifierStrArr.append("lhead=" + dstClusterName)
 		
@@ -180,14 +198,21 @@ def printEdges(edges, nodeMap):
 		
 		modifierStr = "[" + " ".join(edgeModifierStrArr) + "]"
 
-		print "\t" + srcLeafName + "->" + dstLeafName + modifierStr + ";"
+		print("\t" + srcLeafName + "->" + dstLeafName + modifierStr + ";")
 
-source_file_name = sys.argv[1] if len(sys.argv) > 1 else 'graph.simbl'
-topLevelNodeNames, nodeMap, edges = extractNodesAndEdges(source_file_name)
+def generate(simbl_file):
+	topLevelNodeNames, nodeMap, edges = extractNodesAndEdges(simbl_file)
+	printPrelude()
+	for tlNode in topLevelNodeNames:
+		printNodesDescendedFromTopLevelNode(tlNode, nodeMap)
+	print("")
+	printEdges(edges, nodeMap)
+	print("}")
 
-printPrelude()
-for tlNode in topLevelNodeNames:
-	printNodesDescendedFromTopLevelNode(tlNode, nodeMap)
-print ""
-printEdges(edges, nodeMap)
-print "}"
+
+def main():
+	source_file_name = sys.argv[1] if len(sys.argv) > 1 else 'graph.simbl'
+	generate(source_file_name)
+
+if __name__ == "__main__":
+	main()
