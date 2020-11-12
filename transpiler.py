@@ -110,21 +110,22 @@ def extractNodesAndEdges(simbl_source_file):
 					topLevelNodeNames.append(nodeName)
 		return topLevelNodeNames, nodeMap, edges
 
-def printPrelude():
-	print('''
-digraph G {
-	compound=true;
-	# rankdir=LR; # uncomment to make graph go left to right
-	fontname=\"Helvetica\" fontsize=8;
-	node [
-		shape=box color=steelblue
-		fontname=\"Helvetica\" fontsize=8 
-		margin=0.03 width=0 height=0];
-	edge [
-		fontname=\"Helvetica\" fontsize=6 fontcolor=steelblue
-		color=steelblue
-		arrowsize = 0.5]
-	''')
+def getDotgraphPrelude():
+	return [
+		"digraph G {",
+		"	compound=true;",
+		"	# rankdir=LR; # uncomment to make graph go left to right",
+		"	fontname=\"Helvetica\" fontsize=8;",
+		"	node [",
+		"		shape=box color=steelblue",
+		"		fontname=\"Helvetica\" fontsize=8 ",
+		"		margin=0.03 width=0 height=0];",
+		"	edge [",
+		"		fontname=\"Helvetica\" fontsize=6 fontcolor=steelblue",
+		"		color=steelblue",
+		"		arrowsize = 0.5]"
+	]
+
 
 def leafNodeToString(node):
 	if node.anno is not None:
@@ -135,21 +136,23 @@ def leafNodeToString(node):
 def getClusterAlias(parentNodeName):
 	return "cluster_" + parentNodeName
 
-def printNodesDescendedFromTopLevelNode(nodeName, nodeMap, tabDepth=1):
+def getNodesDescendedFromTopLevelNode(nodeName, nodeMap, tabDepth=1):
+	result = []
 	tabstr = "\t" * tabDepth
 	node = nodeMap[nodeName]
 
 	if node.isLeafNode():
-		print(tabstr + leafNodeToString(node))
+		result.append(tabstr + leafNodeToString(node))
 	else: # has children - turn into 'cluster' and recurse on children
-		print(tabstr + "subgraph " + getClusterAlias(nodeName) + " {")
+		result.append(tabstr + "subgraph " + getClusterAlias(nodeName) + " {")
 		if node.anno is not None:
-			print(tabstr + "label=<" + nodeName + "<BR /><FONT POINT-SIZE='6'>" + node.anno + "</FONT>>")
+			result.append(tabstr + "label=<" + nodeName + "<BR /><FONT POINT-SIZE='6'>" + node.anno + "</FONT>>")
 		else:
-			print(tabstr + "label =\"" + nodeName +  "\"")
+			result.append(tabstr + "label =\"" + nodeName +  "\"")
 		for childName in node.children:
-			printNodesDescendedFromTopLevelNode(childName, nodeMap, tabDepth + 1)
-		print(tabstr + "}")
+			result += getNodesDescendedFromTopLevelNode(childName, nodeMap, tabDepth + 1)
+		result.append(tabstr + "}")
+	return result
 
 def isParentNode(nodeName, nodeMap):
 	return nodeName in nodeMap and not nodeMap[nodeName].isLeafNode()
@@ -168,7 +171,8 @@ def getNextEdgeAnnotationColor():
 	if hue >= 1.00: hue -= 1.0
 	return str(int(10*hue)/10.0) + " 0.25 0.8"
 
-def printEdges(edges, nodeMap):
+def getEdges(edges, nodeMap):
+	result = []
 	for edge in edges:
 		edgeModifierStrArr = []
 		# Simbl treats parent nodes and leaf nodes as the same type of entity,
@@ -198,21 +202,23 @@ def printEdges(edges, nodeMap):
 		
 		modifierStr = "[" + " ".join(edgeModifierStrArr) + "]"
 
-		print("\t" + srcLeafName + "->" + dstLeafName + modifierStr + ";")
+		result.append("\t" + srcLeafName + "->" + dstLeafName + modifierStr + ";")
+	return result
 
 def generate(simbl_file):
 	topLevelNodeNames, nodeMap, edges = extractNodesAndEdges(simbl_file)
-	printPrelude()
+	dotOutputArray = getDotgraphPrelude()
 	for tlNode in topLevelNodeNames:
-		printNodesDescendedFromTopLevelNode(tlNode, nodeMap)
-	print("")
-	printEdges(edges, nodeMap)
-	print("}")
-
+		dotOutputArray += getNodesDescendedFromTopLevelNode(tlNode, nodeMap)
+	dotOutputArray.append("")
+	dotOutputArray += getEdges(edges, nodeMap)
+	dotOutputArray.append("}")
+	return dotOutputArray
 
 def main():
 	source_file_name = sys.argv[1] if len(sys.argv) > 1 else 'graph.simbl'
-	generate(source_file_name)
+	for line in generate(source_file_name):
+		print line
 
 if __name__ == "__main__":
 	main()
